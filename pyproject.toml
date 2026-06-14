@@ -1,0 +1,13 @@
+[project]
+name = "ady201m-server"
+version = "0.1.0"
+description = "ADY201m Backend Server."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.136.3",
+]
+
+
+[tool.fastapi]
+entrypoint = "src.main:app"
