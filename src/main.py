@@ -1,4 +1,9 @@
+import os
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+
+from src.utils import compress_chroma_db
 
 app = FastAPI()
 
@@ -8,6 +13,12 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+@app.get("/chromadb")
+def get_chroma_db_archive():
+    file_path = compress_chroma_db()
+
+    return FileResponse(
+        path=file_path,
+        media_type="application/x-xz",
+        filename=os.path.basename(file_path),
+    )
