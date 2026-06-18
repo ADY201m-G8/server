@@ -1,11 +1,16 @@
 import os
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from src.db import DB
 from src.utils import compress_chroma_db
+
+origins = [
+    "http://localhost:3000",
+]
 
 
 class AttendanceReportItem(BaseModel):
@@ -15,6 +20,13 @@ class AttendanceReportItem(BaseModel):
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 db = DB()
 db.init()
 
