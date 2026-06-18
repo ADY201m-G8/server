@@ -64,3 +64,8 @@ async def get_attendance(id: str):
 def set_attendance(id: str, present: bool):
     id = id.upper()
     db.set_attendance(id, present)
+
+
+@app.delete("/attendance")
+def delete_attendance():
+    db.delete_attendance()

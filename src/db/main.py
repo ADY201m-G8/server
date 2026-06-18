@@ -68,3 +68,13 @@ class DB:
             (id, present),
         )
         self._conn.commit()
+
+    def delete_attendance(self):
+        cur = self._conn.cursor()
+
+        cur.execute(
+            """
+            DELETE FROM attendance;
+            """
+        )
+        self._conn.commit()
