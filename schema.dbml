@@ -28,7 +28,7 @@ Table attendances {
   id integer [pk, increment]
   lesson_id integer [ref: > lessons.id]
   student_id text [ref: > students.id]
-  present integer
+  present bool
 
   Indexes {
     (lesson_id, student_id) [unique]
