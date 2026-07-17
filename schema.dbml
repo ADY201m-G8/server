@@ -1,0 +1,36 @@
+Table students {
+  id text [pk]
+  name text [not null]
+}
+
+Table subjects {
+  id text [pk]
+}
+
+Table enrollments {
+  student_id text [ref: > students.id]
+  subject_id text [ref: > subjects.id]
+}
+
+Table rooms {
+  id text [pk]
+}
+
+Table lessons {
+  id integer [pk, increment]
+  subject_id text [ref: > subjects.id]
+  room_id text [ref: > rooms.id]
+  date date [not null]
+  slot integer [not null]
+}
+
+Table attendances {
+  id integer [pk, increment]
+  lesson_id integer [ref: > lessons.id]
+  student_id text [ref: > students.id]
+  present integer
+
+  Indexes {
+    (lesson_id, student_id) [unique]
+  }
+}
