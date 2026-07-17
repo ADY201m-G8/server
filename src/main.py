@@ -110,8 +110,11 @@ def create_student(student: Student):
 
 
 @app.get("/attendances")
-def get_attendances(lesson_id: int = Query(...)):
-    result = supabase.table("attendances").select("*").eq("lesson_id", lesson_id).execute()
+def get_attendances(lesson_id: int = Query(...), student_id: str | None = Query(default=None)):
+    query = supabase.table("attendances").select("*").eq("lesson_id", lesson_id)
+    if student_id:
+        query = query.eq("student_id", student_id)
+    result = query.execute()
     return result.data
 
 
