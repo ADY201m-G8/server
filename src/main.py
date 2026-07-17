@@ -3,10 +3,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from supabase import Client, create_client
-
-from src.utils import compress_chroma_db
 
 load_dotenv()
 
@@ -33,14 +30,3 @@ supabase: Client = create_client(
 @app.get("/")
 def read_root():
     return {"message": "API port for ADY201m project."}
-
-
-@app.get("/chromadb")
-def get_chroma_db_archive():
-    file_path = compress_chroma_db()
-
-    return FileResponse(
-        path=file_path,
-        media_type="application/x-xz",
-        filename=os.path.basename(file_path),
-    )
