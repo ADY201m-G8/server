@@ -33,6 +33,13 @@ class Student(BaseModel):
     name: str
 
 
+class Lesson(BaseModel):
+    subject_id: str
+    room_id: str
+    date: str
+    slot: int
+
+
 @app.get("/")
 def read_root():
     return {"message": "API port for ADY201m project."}
@@ -68,6 +75,26 @@ def get_enrollments(
         query = query.eq("subject_id", subject_id)
     result = query.execute()
     return result.data
+
+
+@app.get("/lessons")
+def get_lessons(
+    subject_id: str | None = Query(default=None),
+    date: str | None = Query(default=None),
+):
+    query = supabase.table("lessons").select("*")
+    if subject_id:
+        query = query.eq("subject_id", subject_id)
+    if date:
+        query = query.eq("date", date)
+    result = query.execute()
+    return result.data
+
+
+@app.post("/lessons")
+def createLesson(lesson: Lesson):
+    result = supabase.table("lessons").insert(lesson.model_dump()).execute()
+    return result.data[0]
 
 
 @app.post("/students")
