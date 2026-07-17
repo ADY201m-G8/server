@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import Client, create_client
@@ -53,6 +53,20 @@ def get_subjects():
 @app.get("/rooms")
 def get_rooms():
     result = supabase.table("rooms").select("*").execute()
+    return result.data
+
+
+@app.get("/enrollments")
+def get_enrollments(
+    student_id: str | None = Query(default=None),
+    subject_id: str | None = Query(default=None),
+):
+    query = supabase.table("enrollments").select("*")
+    if student_id:
+        query = query.eq("student_id", student_id)
+    if subject_id:
+        query = query.eq("subject_id", subject_id)
+    result = query.execute()
     return result.data
 
 
