@@ -1,10 +1,10 @@
-# Backend server for ADY201m project
+# 👻 **Backend server for ADY201m project**
 
-## Project setup
+## 🔧 **Project setup**
 
 First, install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
-Then run in project root:
+Then, setup virtual env:
 
 ```sh
 uv sync
