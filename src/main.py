@@ -30,3 +30,21 @@ supabase: Client = create_client(
 @app.get("/")
 def read_root():
     return {"message": "API port for ADY201m project."}
+
+
+@app.get("/students")
+def get_students():
+    result = supabase.table("students").select("*").execute()
+    return result.data
+
+
+@app.get("/subjects")
+def get_subjects():
+    result = supabase.table("subjects").select("*").execute()
+    return result.data
+
+
+@app.get("/rooms")
+def get_rooms():
+    result = supabase.table("rooms").select("*").execute()
+    return result.data
