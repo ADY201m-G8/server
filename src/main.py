@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import Client, create_client
 
@@ -27,6 +28,11 @@ supabase: Client = create_client(
 )
 
 
+class Student(BaseModel):
+    id: str
+    name: str
+
+
 @app.get("/")
 def read_root():
     return {"message": "API port for ADY201m project."}
@@ -48,3 +54,9 @@ def get_subjects():
 def get_rooms():
     result = supabase.table("rooms").select("*").execute()
     return result.data
+
+
+@app.post("/students")
+def create_student(student: Student):
+    result = supabase.table("students").insert(student.model_dump()).execute()
+    return result.data[0]
