@@ -40,6 +40,12 @@ class Lesson(BaseModel):
     slot: int
 
 
+class Attendance(BaseModel):
+    lesson_id: int
+    student_id: str
+    present: bool = False
+
+
 @app.get("/")
 def read_root():
     return {"message": "API port for ADY201m project."}
@@ -100,4 +106,16 @@ def createLesson(lesson: Lesson):
 @app.post("/students")
 def create_student(student: Student):
     result = supabase.table("students").insert(student.model_dump()).execute()
+    return result.data[0]
+
+
+@app.get("/attendances")
+def get_attendances(lesson_id: int = Query(...)):
+    result = supabase.table("attendances").select("*").eq("lesson_id", lesson_id).execute()
+    return result.data
+
+
+@app.post("/attendances")
+def create_attendance(attendance: Attendance):
+    result = supabase.table("attendances").insert(attendance.model_dump()).execute()
     return result.data[0]
