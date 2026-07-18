@@ -15,6 +15,15 @@
         overflow-y: scroll;
         height: 65vh;
       }
+
+      #attendance_status {
+        &.present {
+          color: hsl(115deg, 74%, 64%);
+        }
+        &.absent {
+          color: hsl(343deg, 91%, 75%);
+        }
+      }
     </style>
   </head>
   <body>
@@ -194,12 +203,13 @@
         students.forEach((s, i) => {
           const present = attendanceMap[s.id];
           const status = present ? "✓ Present" : "✗ Absent";
+          const cls = present ? "present" : "absent";
           html += `
           <tr>
             <td>${i + 1}</td>
             <td>${s.id}</td>
             <td>${s.name}</td>
-            <td>${status}</td>
+            <td id="attendance_status" class="${cls}">${status}</td>
           </tr>
           `;
         });
