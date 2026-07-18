@@ -25,9 +25,8 @@ Table lessons {
 }
 
 Table attendances {
-  id integer [pk, increment]
-  lesson_id integer [ref: > lessons.id]
-  student_id text [ref: > students.id]
+  lesson_id integer [pk, ref: > lessons.id]
+  student_id text [pk, ref: > students.id]
   present bool
 
   Indexes {
