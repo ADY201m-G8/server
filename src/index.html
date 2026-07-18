@@ -63,10 +63,24 @@
           <p aria-busy="true">Loading lessons...</p>
         </div>
       </article>
+
+      <dialog id="attendances-dialog">
+        <article>
+          <header id="dialog-header"></header>
+          <div id="attendances-table"></div>
+          <footer>
+            <form method="dialog">
+              <button>Close</button>
+            </form>
+          </footer>
+        </article>
+      </dialog>
     </main>
 
     <script>
       const API = "";
+      let allLessons = [];
+      let allStudents = [];
 
       function todayStr() {
         return new Date().toISOString().slice(0, 10);
@@ -91,11 +105,16 @@
         });
       }
 
+      async function loadStudents() {
+        allStudents = await fetch(`${API}/students`).then((r) => r.json());
+      }
+
       async function loadLessons(date) {
         const container = document.getElementById("lessons-list");
         container.innerHTML = '<p aria-busy="true">Loading lessons...</p>';
 
         const lessons = await fetch(`${API}/lessons?date=${date}`).then((r) => r.json());
+        allLessons = lessons;
 
         if (lessons.length === 0) {
           container.innerHTML = "<p>No lessons for this date.</p>";
@@ -115,7 +134,7 @@
       `;
         lessons.forEach((l) => {
           html += `
-          <tr>
+          <tr onclick="openAttendances(${l.id})" style="cursor:pointer">
             <td>${l.subject_id}</td>
             <td>${l.room_id}</td>
             <td>${l.slot}</td>
@@ -124,6 +143,63 @@
         });
         html += "</tbody></table>";
         container.innerHTML = html;
+      }
+
+      async function openAttendances(lessonId) {
+        const lesson = allLessons.find((l) => l.id === lessonId);
+        if (!lesson) return;
+
+        document.getElementById("dialog-header").innerHTML =
+          `<strong>${lesson.subject_id}</strong> / ${lesson.room_id} / Slot ${lesson.slot}`;
+
+        const tableContainer = document.getElementById("attendances-table");
+        tableContainer.innerHTML = '<p aria-busy="true">Loading...</p>';
+        document.getElementById("attendances-dialog").showModal();
+
+        const [enrollments, attendances] = await Promise.all([
+          fetch(`${API}/enrollments?subject_id=${lesson.subject_id}`).then((r) => r.json()),
+          fetch(`${API}/attendances?lesson_id=${lessonId}`).then((r) => r.json()),
+        ]);
+
+        const attendanceMap = {};
+        attendances.forEach((a) => {
+          attendanceMap[a.student_id] = a.present;
+        });
+
+        const enrolledIds = enrollments.map((e) => e.student_id);
+        const students = allStudents.filter((s) => enrolledIds.includes(s.id));
+
+        if (students.length === 0) {
+          tableContainer.innerHTML = "<p>No students enrolled in this subject.</p>";
+          return;
+        }
+
+        let html = `
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Index</th>
+              <th scope="col">ID</th>
+              <th scope="col">Name</th>
+              <th scope="col">Present</th>
+            </tr>
+          </thead>
+          <tbody>
+        `;
+        students.forEach((s, i) => {
+          const present = attendanceMap[s.id];
+          const status = present === 1 ? "✓ Present" : present === 0 ? "✗ Absent" : "—";
+          html += `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${s.id}</td>
+            <td>${s.name}</td>
+            <td>${status}</td>
+          </tr>
+          `;
+        });
+        html += "</tbody></table>";
+        tableContainer.innerHTML = html;
       }
 
       document.getElementById("lesson-form").addEventListener("submit", async (e) => {
@@ -152,6 +228,7 @@
         document.getElementById("date-input").value = todayStr();
         document.getElementById("filter-date-input").value = todayStr();
         loadOptions();
+        loadStudents();
         loadLessons(todayStr());
       });
     </script>
