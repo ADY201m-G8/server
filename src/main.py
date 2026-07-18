@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, time, timezone
+from datetime import datetime, time
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
