@@ -10,6 +10,12 @@
       href="https://avatars.githubusercontent.com/u/289326532?s=48&v=4"
     />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <style>
+      #attendances-table {
+        overflow-y: scroll;
+        height: 65vh;
+      }
+    </style>
   </head>
   <body>
     <main class="container">
@@ -66,8 +72,14 @@
 
       <dialog id="attendances-dialog">
         <article>
-          <header id="dialog-header" style="display:flex;justify-content:space-between;align-items:center"></header>
+          <header
+            id="dialog-header"
+            style="display: flex; justify-content: space-between; align-items: center"
+          ></header>
           <div id="attendances-table"></div>
+          <footer>
+            <form method="dialog"><button>Close</button></form>
+          </footer>
         </article>
       </dialog>
     </main>
@@ -76,6 +88,7 @@
       const API = "";
       let allLessons = [];
       let allStudents = [];
+      let currentLessonId = null;
 
       function todayStr() {
         return new Date().toISOString().slice(0, 10);
@@ -140,16 +153,13 @@
         container.innerHTML = html;
       }
 
-      async function openAttendances(lessonId) {
+      async function refreshAttendances() {
+        const lessonId = currentLessonId;
         const lesson = allLessons.find((l) => l.id === lessonId);
         if (!lesson) return;
 
-        document.getElementById("dialog-header").innerHTML =
-          `<span><strong>${lesson.subject_id}</strong> / ${lesson.room_id} / Slot ${lesson.slot}</span><form method="dialog"><button>Close</button></form>`;
-
         const tableContainer = document.getElementById("attendances-table");
         tableContainer.innerHTML = '<p aria-busy="true">Loading...</p>';
-        document.getElementById("attendances-dialog").showModal();
 
         const [enrollments, attendances] = await Promise.all([
           fetch(`${API}/enrollments?subject_id=${lesson.subject_id}`).then((r) => r.json()),
@@ -195,6 +205,19 @@
         });
         html += "</tbody></table>";
         tableContainer.innerHTML = html;
+      }
+
+      async function openAttendances(lessonId) {
+        const lesson = allLessons.find((l) => l.id === lessonId);
+        if (!lesson) return;
+
+        currentLessonId = lessonId;
+
+        document.getElementById("dialog-header").innerHTML =
+          `<span><strong>${lesson.subject_id}</strong> / ${lesson.room_id} / Slot ${lesson.slot}</span><button onclick="refreshAttendances()">⟳</button>`;
+
+        document.getElementById("attendances-dialog").showModal();
+        await refreshAttendances();
       }
 
       document.getElementById("lesson-form").addEventListener("submit", async (e) => {
