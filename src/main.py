@@ -121,5 +121,5 @@ def get_attendances(lesson_id: int = Query(...), student_id: str | None = Query(
 
 @app.post("/attendances")
 def create_attendance(attendance: Attendance):
-    result = supabase.table("attendances").insert(attendance.model_dump()).execute()
+    result = supabase.table("attendances").upsert(attendance.model_dump()).execute()
     return result.data[0]
