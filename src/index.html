@@ -66,13 +66,8 @@
 
       <dialog id="attendances-dialog">
         <article>
-          <header id="dialog-header"></header>
+          <header id="dialog-header" style="display:flex;justify-content:space-between;align-items:center"></header>
           <div id="attendances-table"></div>
-          <footer>
-            <form method="dialog">
-              <button>Close</button>
-            </form>
-          </footer>
         </article>
       </dialog>
     </main>
@@ -150,7 +145,7 @@
         if (!lesson) return;
 
         document.getElementById("dialog-header").innerHTML =
-          `<strong>${lesson.subject_id}</strong> / ${lesson.room_id} / Slot ${lesson.slot}`;
+          `<span><strong>${lesson.subject_id}</strong> / ${lesson.room_id} / Slot ${lesson.slot}</span><form method="dialog"><button>Close</button></form>`;
 
         const tableContainer = document.getElementById("attendances-table");
         tableContainer.innerHTML = '<p aria-busy="true">Loading...</p>';
