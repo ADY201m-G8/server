@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import Client, create_client
@@ -48,7 +49,7 @@ class Attendance(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"message": "API port for ADY201m project."}
+    return FileResponse("src/index.html")
 
 
 @app.get("/students")

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ADY201m Project - Attendance Service</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://avatars.githubusercontent.com/u/289326532?s=48&v=4"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h3>ADY201m Project - Attendance Service</h3>
+
+      <article>
+        <header><strong>Create Lesson</strong></header>
+        <form id="lesson-form">
+          <div class="grid">
+            <label>
+              Subject
+              <select id="subject-select" required>
+                <option value="" disabled selected>Loading...</option>
+              </select>
+            </label>
+            <label>
+              Room
+              <select id="room-select" required>
+                <option value="" disabled selected>Loading...</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid">
+            <label>
+              Date
+              <input type="date" id="date-input" required />
+            </label>
+            <label>
+              Slot
+              <select id="slot-input" required>
+                <option value="" disabled selected>Select slot</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit">Create</button>
+        </form>
+      </article>
+
+      <article>
+        <header>
+          <div class="grid">
+            <strong>Today's Lessons</strong>
+            <input type="date" id="filter-date-input" style="width: auto; margin-bottom: 0" />
+          </div>
+        </header>
+        <div id="lessons-list">
+          <p aria-busy="true">Loading lessons...</p>
+        </div>
+      </article>
+    </main>
+
+    <script>
+      const API = "";
+
+      function todayStr() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      async function loadOptions() {
+        const [subjects, rooms] = await Promise.all([
+          fetch(`${API}/subjects`).then((r) => r.json()),
+          fetch(`${API}/rooms`).then((r) => r.json()),
+        ]);
+
+        const subjectSelect = document.getElementById("subject-select");
+        subjectSelect.innerHTML = '<option value="" disabled selected>Select subject</option>';
+        subjects.forEach((s) => {
+          subjectSelect.innerHTML += `<option value="${s.id}">${s.id}</option>`;
+        });
+
+        const roomSelect = document.getElementById("room-select");
+        roomSelect.innerHTML = '<option value="" disabled selected>Select room</option>';
+        rooms.forEach((r) => {
+          roomSelect.innerHTML += `<option value="${r.id}">${r.id}</option>`;
+        });
+      }
+
+      async function loadLessons(date) {
+        const container = document.getElementById("lessons-list");
+        container.innerHTML = '<p aria-busy="true">Loading lessons...</p>';
+
+        const lessons = await fetch(`${API}/lessons?date=${date}`).then((r) => r.json());
+
+        if (lessons.length === 0) {
+          container.innerHTML = "<p>No lessons for this date.</p>";
+          return;
+        }
+
+        let html = `
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Subject</th>
+              <th scope="col">Room</th>
+              <th scope="col">Slot</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+        lessons.forEach((l) => {
+          html += `
+          <tr>
+            <td>${l.subject_id}</td>
+            <td>${l.room_id}</td>
+            <td>${l.slot}</td>
+          </tr>
+        `;
+        });
+        html += "</tbody></table>";
+        container.innerHTML = html;
+      }
+
+      document.getElementById("lesson-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const body = {
+          subject_id: document.getElementById("subject-select").value,
+          room_id: document.getElementById("room-select").value,
+          date: document.getElementById("date-input").value,
+          slot: parseInt(document.getElementById("slot-input").value),
+        };
+        await fetch(`${API}/lessons`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        e.target.reset();
+        document.getElementById("date-input").value = todayStr();
+        loadLessons(document.getElementById("filter-date-input").value);
+      });
+
+      document.getElementById("filter-date-input").addEventListener("change", (e) => {
+        loadLessons(e.target.value);
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("date-input").value = todayStr();
+        document.getElementById("filter-date-input").value = todayStr();
+        loadOptions();
+        loadLessons(todayStr());
+      });
+    </script>
+  </body>
+</html>
