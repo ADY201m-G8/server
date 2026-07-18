@@ -193,7 +193,7 @@
         `;
         students.forEach((s, i) => {
           const present = attendanceMap[s.id];
-          const status = present === 1 ? "✓ Present" : present === 0 ? "✗ Absent" : "—";
+          const status = present ? "✓ Present" : "✗ Absent";
           html += `
           <tr>
             <td>${i + 1}</td>
