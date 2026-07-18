@@ -1,10 +1,12 @@
 import os
+from datetime import datetime, time, timezone
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
 from supabase import Client, create_client
 
 load_dotenv()
@@ -45,6 +47,21 @@ class Attendance(BaseModel):
     lesson_id: int
     student_id: str
     present: bool = False
+
+
+class ScanAttendance(BaseModel):
+    student_id: str
+    room_id: str
+    timestamp: int  # unix timestamp
+    present: bool = True
+
+
+SLOT_RANGES = {
+    1: (time(7, 30), time(9, 50)),
+    2: (time(10, 10), time(12, 20)),
+    3: (time(12, 50), time(15, 10)),
+    4: (time(15, 20), time(17, 40)),
+}
 
 
 @app.get("/")
@@ -111,7 +128,9 @@ def create_student(student: Student):
 
 
 @app.get("/attendances")
-def get_attendances(lesson_id: int = Query(...), student_id: str | None = Query(default=None)):
+def get_attendances(
+    lesson_id: int = Query(...), student_id: str | None = Query(default=None)
+):
     query = supabase.table("attendances").select("*").eq("lesson_id", lesson_id)
     if student_id:
         query = query.eq("student_id", student_id)
@@ -122,4 +141,53 @@ def get_attendances(lesson_id: int = Query(...), student_id: str | None = Query(
 @app.post("/attendances")
 def create_attendance(attendance: Attendance):
     result = supabase.table("attendances").upsert(attendance.model_dump()).execute()
+    return result.data[0]
+
+
+@app.post("/attendances/scan")
+def scan_attendance(scan: ScanAttendance):
+    dt = datetime.fromtimestamp(scan.timestamp, tz=ZoneInfo("Asia/Ho_Chi_Minh"))
+    current_time = dt.time()
+    current_date = dt.strftime("%Y-%m-%d")
+
+    matched_slot = None
+    for slot, (start, end) in SLOT_RANGES.items():
+        if start <= current_time <= end:
+            matched_slot = slot
+            break
+
+    print(f"Time: {current_time} | Matched slot: {matched_slot}")
+
+    if matched_slot is None:
+        raise HTTPException(
+            status_code=404, detail="No active lesson slot for this time"
+        )
+
+    lessons = (
+        supabase.table("lessons")
+        .select("*")
+        .eq("room_id", scan.room_id)
+        .eq("date", current_date)
+        .eq("slot", matched_slot)
+        .execute()
+        .data
+    )
+
+    if not lessons:
+        raise HTTPException(
+            status_code=404, detail="No lesson found for this room at this time"
+        )
+
+    lesson = lessons[0]
+    result = (
+        supabase.table("attendances")
+        .upsert(
+            {
+                "lesson_id": lesson["id"],
+                "student_id": scan.student_id,
+                "present": scan.present,
+            }
+        )
+        .execute()
+    )
     return result.data[0]
